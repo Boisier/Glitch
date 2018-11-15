@@ -1,0 +1,6 @@
+version: "Apple Swift version 4.2.1 (swiftlang-1000.11.42 clang-1000.11.45.1)"
+options: "e68c0c5bbd19dec5b3c7d6291fd1cafb"
+build_time: [1542251121, 130180000]
+inputs:
+  "/Users/val/Projects/fun/glitch/glitch/ViewController.swift": [1542251114, 0]
+  "/Users/val/Projects/fun/glitch/glitch/AppDelegate.swift": [1542251114, 0]
