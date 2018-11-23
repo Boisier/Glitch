@@ -1,0 +1,111 @@
+{
+	"effects":
+	[
+		{
+			"name": "Image Clamping",
+			"identifier": 1,
+			"parameters": [
+				{
+					"name": "Clamp size",
+					"type": "float",
+					"interaction": "magnify",
+					"values": [
+						{
+							"value": "100",
+							"min": "1",
+							"precision": "0"
+						}
+					]
+				},
+				{
+					"name": "Clamp position",
+					"type": "position2D",
+					"interaction": "scroll2D",
+					"values": [
+						{
+							"label": "X",
+							"value": "_w:center",
+							"min": "0",
+							"max": "_w",
+							"precision": "1"
+						}, {
+							"label": "Y",
+							"value": "_h:center",
+							"min": "0",
+							"max": "_h",
+							"precision": "1"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Vertical Glitch",
+			"identifier": 2,
+			"parameters": [
+				{
+					"name": "Line Position",
+					"type": "float",
+					"interaction": "scrollY",
+					"values": [
+						{
+							"value": "_h:center",
+							"min": "0",
+							"max": "_h"
+						}
+					]
+				}
+			]
+		}, {
+			"name": "Pixel Sorting",
+			"identifier": 3,
+			"parameters": [
+				{
+					"name": "Threshold",
+					"type": "position2D",
+					"interaction": "default",
+					"values": [
+						{
+							"label": "↑",
+							"value": "200",
+							"min": "0",
+							"max": "255",
+							"precision": "0"
+						}, {
+							"label": "↓",
+							"value": "50",
+							"min": "0",
+							"max": "255",
+							"precision": "0"
+						}
+					]
+				}, {
+					"name": "Smoothness",
+					"type": "float",
+					"interaction": "scrollY",
+					"values": [
+						{
+							"value": "150",
+							"min": "0",
+							"max": "_h",
+							"precision": "0",
+							"step": "1"
+						}
+					]
+				}, {
+					"name": "Render step",
+					"type": "int",
+					"interaction": "default",
+					"values": [
+						{
+							"value": "0",
+							"min": "0",
+							"max": "5",
+							"precision": "0"
+						}
+					]
+				}
+			]
+		}
+	]
+}
