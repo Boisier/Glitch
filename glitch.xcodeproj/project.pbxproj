@@ -38,6 +38,7 @@
 		397E8CD5219D25A300CFBC60 /* MTLTexture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 397E8CD4219D25A300CFBC60 /* MTLTexture.swift */; };
 		397E8CD7219D272700CFBC60 /* NSImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 397E8CD6219D272700CFBC60 /* NSImage.swift */; };
 		39970C0921A0F8030050CCE3 /* EffectsListScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39970C0821A0F8030050CCE3 /* EffectsListScene.swift */; };
+		39A102F221A79C5D00168AF7 /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 39A102F121A79C5D00168AF7 /* .gitignore */; };
 		39A35E0321A5EFDE00A7DD7E /* EffectsListDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39A35E0221A5EFDE00A7DD7E /* EffectsListDataSource.swift */; };
 		39A35E0521A5F02000A7DD7E /* EffectsListDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39A35E0421A5F02000A7DD7E /* EffectsListDelegate.swift */; };
 		39A35E0821A5F0A300A7DD7E /* GlitchParameter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39A35E0721A5F0A300A7DD7E /* GlitchParameter.swift */; };
@@ -90,6 +91,7 @@
 		397E8CD4219D25A300CFBC60 /* MTLTexture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTLTexture.swift; sourceTree = "<group>"; };
 		397E8CD6219D272700CFBC60 /* NSImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSImage.swift; sourceTree = "<group>"; };
 		39970C0821A0F8030050CCE3 /* EffectsListScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EffectsListScene.swift; sourceTree = "<group>"; };
+		39A102F121A79C5D00168AF7 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		39A35E0221A5EFDE00A7DD7E /* EffectsListDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EffectsListDataSource.swift; sourceTree = "<group>"; };
 		39A35E0421A5F02000A7DD7E /* EffectsListDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EffectsListDelegate.swift; sourceTree = "<group>"; };
 		39A35E0721A5F0A300A7DD7E /* GlitchParameter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlitchParameter.swift; sourceTree = "<group>"; };
@@ -171,6 +173,7 @@
 		397E8C85219D19EA00CFBC60 = {
 			isa = PBXGroup;
 			children = (
+				39A102F121A79C5D00168AF7 /* .gitignore */,
 				397E8C90219D19EA00CFBC60 /* glitch */,
 				397E8C8F219D19EA00CFBC60 /* Products */,
 			);
@@ -356,6 +359,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				39A102F221A79C5D00168AF7 /* .gitignore in Resources */,
 				397E8CD3219D1B1D00CFBC60 /* 001.jpeg in Resources */,
 				397E8C96219D19EB00CFBC60 /* Assets.xcassets in Resources */,
 				39788F9E21A3E72700C29EBE /* availableEffects.json in Resources */,
