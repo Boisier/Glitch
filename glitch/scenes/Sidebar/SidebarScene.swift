@@ -20,7 +20,7 @@ class SidebarScene: NSViewController {
 
 	/// Init view, add observers and populate the popup list with all available effects
 	override func viewDidLoad() {
-		NotificationCenter.default.addObserver(self, selector: #selector(openPopup), name: NSNotification.Name("addEffect"), object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(openPopup), name: Notifications.addEffect.name, object: nil)
 
 		// Fill the list with the available effects
 		addEffectPopUp!.addItems(withTitles: GlitchEngine.instance.availableEffects.map{ $0.name })
@@ -57,9 +57,5 @@ class SidebarScene: NSViewController {
 		EffectsList.instance.add(effectIdentifier: popup.selectedItem!.representedObject as! Int)
 
 		popup.selectItem(at: 0)
-	}
-
-	@IBAction func render(_ sender: NSButton) {
-		NotificationCenter.default.post(name: Notifications.doRender.name, object: nil)
 	}
 }

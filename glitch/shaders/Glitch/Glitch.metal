@@ -20,9 +20,9 @@ kernel void glitch_engine_compute(
              texture2d<float, access::read_write>      bufferTextureC [[ texture(4) ]])             // Buffer texture C
 {
 	// Copy the current pixel to the bridge texture if this is the preparation pass
-	if(uniforms[0].currentEffect == 0) {
-		bridgeTexture.write(originalTexture.read(pos), pos);
-	}
+//	if(uniforms[0].currentEffect == 0) {
+//		bridgeTexture.write(originalTexture.read(pos), pos);
+//	}
 
 	switch(uniforms[0].currentEffectIdentifier) {
 		case GlitchEffects::imageClamping: {

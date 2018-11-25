@@ -48,19 +48,16 @@ class PixelSortingEffect {
 private:
 	// PASSES
 	void passA();
-	void passB();
-	void passC();
 
 	// Utils
+	void sortWithPrevPixel();
+	void sortWithNextPixel();
+
+
 	float pixelValue(const float4 color);
 	bool sameSection(const float4 colorA, const float4 colorB);
 
-	uint2 nextPosition(const uint2 currentPosition);
-	uint2 nextPosition(float2 currentPosition);
-	uint2 prevPosition(const uint2 currentPosition);
-	uint2 prevPosition(float2 currentPosition);
-
-	bool positionIsInTexture(const float2 precisePosition);
+	bool positionIsInTexture(const uint2 position);
 
 	inline uint2 toUint2(float2 position);
 

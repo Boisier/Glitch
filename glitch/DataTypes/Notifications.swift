@@ -22,6 +22,18 @@ extension RawRepresentable where RawValue == String, Self: NotificationName {
 }
 
 enum Notifications: String, NotificationName {
+	// Action / Order sent
+	case openFile
+	case toggleSidebar
+	case addEffect
+	case saveRender
+	case resetRender
+	case stopRenderLoop
+	case startRenderLoop
+
+	// Events
+	case windowResized
 	case effectAdded
-	case doRender
+	case userScrolled
+	case userMagnified
 }

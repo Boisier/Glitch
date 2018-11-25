@@ -29,7 +29,7 @@ class SplitViewController: NSSplitViewController {
 		sidebar.canCollapse = true
 		sidebar.collapseBehavior = .preferResizingSplitViewWithFixedSiblings
 
-		NotificationCenter.default.addObserver(self, selector: #selector(toggleSidebarObserver), name: NSNotification.Name(rawValue: "toggleSidebar"), object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(toggleSidebarObserver), name: Notifications.toggleSidebar.name, object: nil)
 	}
 
 	@objc func toggleSidebarObserver(_ sender: Any?) {

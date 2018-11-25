@@ -40,7 +40,7 @@ class AppDelegate: NSWindowController, NSApplicationDelegate {
 
 			guard let filepath = result?.path else { return }
 
-			NotificationCenter.default.post(name: NSNotification.Name("userOpenedFile"), object: filepath)
+			NotificationCenter.default.post(name: Notifications.openFile.name, object: filepath)
 
 		} else {
 			// User clicked on "Cancel"
@@ -49,21 +49,44 @@ class AppDelegate: NSWindowController, NSApplicationDelegate {
 	}
 
 	func application(_ sender: NSApplication, openFile filename: String) -> Bool {
-		NotificationCenter.default.post(name: NSNotification.Name("userOpenedFile"), object: filename)
+		NotificationCenter.default.post(name: Notifications.openFile.name, object: filename)
 
 		return true;
 	}
 
 	@IBAction func onSave(_ sender: Any) {
-		NotificationCenter.default.post(name: NSNotification.Name("userAskForSaving"), object: nil)
+		NotificationCenter.default.post(name: Notifications.saveRender.name, object: nil)
 	}
 
 	@IBAction func toggleSidebar(_ sender: Any) {
-		NotificationCenter.default.post(name: NSNotification.Name("toggleSidebar"), object: nil)
+		NotificationCenter.default.post(name: Notifications.toggleSidebar.name, object: nil)
 	}
 
-
 	@IBAction func addEffect(_ sender: Any) {
-		NotificationCenter.default.post(name: NSNotification.Name("addEffect"), object: nil)
+		NotificationCenter.default.post(name: Notifications.addEffect.name, object: nil)
+	}
+
+	private var _renderLoopActive: Bool = true
+	@IBOutlet var playPauseLabel: NSToolbarItem!
+	@IBOutlet var playPauseBtn: NSSegmentedControl!
+
+	@IBAction func toggleRenderLoop(_ sender: Any) {
+		if(_renderLoopActive) {
+			_renderLoopActive = false
+			playPauseLabel.label = "Play"
+			playPauseBtn.setImage(NSImage(named: NSImage.touchBarPlayTemplateName), forSegment: 0)
+			NotificationCenter.default.post(name: Notifications.stopRenderLoop.name, object: false)
+
+			return
+		}
+
+		_renderLoopActive = true
+		playPauseLabel.label = "Pause"
+		playPauseBtn.setImage(NSImage(named: NSImage.touchBarPauseTemplateName), forSegment: 0)
+		NotificationCenter.default.post(name: Notifications.startRenderLoop.name, object: false)
+	}
+
+	@IBAction func restartRender(_ sender: Any) {
+		NotificationCenter.default.post(name: Notifications.resetRender.name, object: nil)
 	}
 }

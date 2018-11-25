@@ -62,6 +62,8 @@ class GlitchEngine {
 		loadEffects()
 
 		_metal.makeComputePipeline(_computePipeline, computeFunction: _computeFunction)
+
+		NotificationCenter.default.addObserver(self, selector: #selector(resetBridgeTexture), name: Notifications.resetRender.name, object: nil)
 	}
 }
 
@@ -101,12 +103,23 @@ extension GlitchEngine {
 		_metal.removeTexture(_textureName);
 		_metal.storeTexture(_textureName, at: texture)
 
-//		_textureSize = size;
-
 		_shaderBuffersNames.forEach {
 			_metal.removeTexture($0);
 			_metal.makeShaderTexture($0, from: _metal.texture(_textureName))
 		}
+
+		resetBridgeTexture()
+	}
+
+	@objc
+	func resetBridgeTexture() {
+
+		let sourceTexture = _metal.texture(_textureName)
+		let bridgeTexture = _metal.texture(_shaderBuffersNames[0])
+		bridgeTexture.replace(region: bridgeTexture.region,
+							  mipmapLevel: 0,
+							  withBytes: sourceTexture.bytes(),
+							  bytesPerRow: bridgeTexture.width * 4)
 	}
 
 	/// Will render the given mesh by applying each effect on it one by one
@@ -195,11 +208,8 @@ extension GlitchEngine {
 		renderEncoder.setVertexBuffer(mesh.vertexBuffer, offset: 0, index: 0)
 		renderEncoder.setVertexBuffer(mesh.transformationsBuffer, offset: 0, index: 2)
 
-		let activeEffectCount = EffectsList.instance.effects.reduce(0) { $1.value.active ? $0+1 : $0 }
-
 		// Bind the texture
-		let textureBufferName = activeEffectCount > 0 ? _shaderBuffersNames[0] : _textureName
-		renderEncoder.setFragmentTexture(_metal.texture(textureBufferName), index: 0)
+		renderEncoder.setFragmentTexture(_metal.texture( _shaderBuffersNames[0]), index: 0)
 		renderEncoder.setFragmentSamplerState(_metal.defaultSampler(), index: 0)
 
 		renderEncoder.drawPrimitives(type: mesh.primitiveType, vertexStart: 0, vertexCount: mesh.vertices.count)

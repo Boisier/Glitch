@@ -115,13 +115,15 @@ class MetalEngine {
 	private var _framerate:Int?
 
 	/// Timer used when a rendering loop is set up
-	private var _timer:Timer?
+	private var _timer:Timer? = nil
 
 	/// Method called on each render loop
 	private var _renderMethod:(() -> Void)?
 
 	/// Color used to clear the screen on each frame (default is black)
 	private var _clearColor:MTLClearColor = MTLClearColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.0)
+
+	var hasRenderLoop:Bool { return _timer != nil }
 
 
 	// /////////////////////////////////
@@ -382,8 +384,10 @@ extension MetalEngine {
 	func loadTexture(at url: URL) -> MTLTexture {
 		// Load and resize the texture
 		let sourceImage = NSImage(byReferencing: url).resize(to: NSSize(width: 1000, height: 1000))
+
 		let loader = MTKTextureLoader(device: _device)
-		return try! loader.newTexture(data: sourceImage.tiffRepresentation!, options: nil)
+		let options = [MTKTextureLoader.Option.SRGB: false]
+		return try! loader.newTexture(data: sourceImage.tiffRepresentation!, options: options)
 	}
 
 	func makeShaderTexture(_ name: String, from sourceTexture: MTLTexture) -> Void {
@@ -501,7 +505,7 @@ extension MetalEngine {
 			fatalError("Cannot get a renderEncoder outside a render pass")
 		}
 
-		let computeEncoder = _commandBuffer!.makeComputeCommandEncoder(dispatchType: .concurrent)!
+		let computeEncoder = _commandBuffer!.makeComputeCommandEncoder()!
 		computeEncoder.setComputePipelineState(_computePipelines[name]!)
 
 		return computeEncoder
@@ -568,6 +572,11 @@ extension MetalEngine {
 
 			endRenderPass()
 		}
+	}
+
+	func stopRenderLoop() {
+		_timer?.invalidate();
+		_timer = nil
 	}
 }
 

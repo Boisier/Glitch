@@ -29,9 +29,9 @@ class ImageClampingSceneController: NSViewController, NSWindowDelegate {
 		view.autoresizingMask = [.width, .height]
 		view.wantsLayer = true
 
-		NotificationCenter.default.addObserver(self, selector: #selector(onImageUpdate), name: NSNotification.Name("userOpenedFile"), object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(onImageUpdate), name: Notifications.openFile.name, object: nil)
 
-		NotificationCenter.default.addObserver(self, selector: #selector(onSave), name: NSNotification.Name("userAskForSaving"), object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(onSave), name: Notifications.saveRender.name, object: nil)
 	}
 
 	override func viewDidAppear() {

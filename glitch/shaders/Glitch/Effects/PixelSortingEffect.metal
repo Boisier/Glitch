@@ -21,8 +21,8 @@ void PixelSortingEffect::executeRenderPass(const int renderPass) {
 
 	switch (renderPass) {
 		case 0: passA(); break;
-//		case 1: passB(); break;
-//		case 2: passC(); break;
+		case 1: passA(); break;
+		case 2: passA(); break;
 		default:
 			return;
 	}
@@ -30,99 +30,59 @@ void PixelSortingEffect::executeRenderPass(const int renderPass) {
 
 /// PASS A : Get all related informations for this precise pixel and execute the sorting
 void PixelSortingEffect::passA() {
-	if(_position.x == 0 && _position.y == 0) {
-		float4 storedVector = _bufferTextureC.read(_position);
-		if(storedVector.x == _nextVector.x && storedVector.y == _nextVector.y && storedVector.w == 0) {
-			return;
-		}
 
-		_bufferTextureC.write(float4(_nextVector, 0, 0), _position);
-	}
+	// Prev pixel
+	sortWithPrevPixel();
 
+	// Next pixel
+	sortWithNextPixel();
+}
 
+void PixelSortingEffect::sortWithPrevPixel() {
 	float4 inPixel = _bridgeTexture.read(_position);
+	float inPixelValue = pixelValue(inPixel);
+	uint2 prevPosition = toUint2(float2(_position) - _nextVector);
 
-	// Start by getting all needed informations about the current pixel
-	float value = pixelValue(inPixel);
+	if(!positionIsInTexture(prevPosition))
+		return;
 
-	float2 precisePosition = float2(_position);
-	float2 prevPosition = precisePosition - _nextVector;
-	float2 nextPosition = precisePosition + _nextVector;
+	float4 prevPixel = _bridgeTexture.read(prevPosition);
+	float prevPixelValue = pixelValue(prevPixel);
 
-	bool isSectionStart = (!sameSection(inPixel, _bridgeTexture.read(toUint2(prevPosition))) && sameSection(inPixel, _bridgeTexture.read(toUint2(nextPosition))) ) || !positionIsInTexture(prevPosition);
-	bool isSectionEnd = (sameSection(inPixel, _bridgeTexture.read(toUint2(prevPosition))) && !sameSection(inPixel, _bridgeTexture.read(toUint2(nextPosition)))) || !positionIsInTexture(nextPosition);
+	if(abs(inPixelValue - prevPixelValue) >= _threshold)
+		return;
 
+	if(inPixelValue <= prevPixelValue)
+		return;
 
-	_bufferTextureA.write(float4(value, float(isSectionStart), float(isSectionEnd), 1), _position);
-	_bufferTextureB.write(inPixel, _position);
+	_bridgeTexture.write(prevPixel, _position);
+	_bridgeTexture.write(inPixel, prevPosition);
+
+	inPixel = prevPixel;
+	inPixelValue = prevPixelValue;
 }
 
 
-void PixelSortingEffect::passB() {
-	float2 precisePosition = float2(_position);
-	float2 prevPosition = precisePosition - _nextVector;
-	float2 nextPosition = precisePosition + _nextVector;
+void PixelSortingEffect::sortWithNextPixel() {
+	float4 inPixel = _bridgeTexture.read(_position);
+	float inPixelValue = pixelValue(inPixel);
+	uint2 nextPosition = toUint2(float2(_position) + _nextVector);
 
-	float4 inPixel = _bufferTextureA.read(_position);
-	float4 inPixelInfos = _bufferTextureB.read(_position);
+	if(!positionIsInTexture(nextPosition))
+		return;
 
-	// If this is not a section start, compare with previous
-	if(!inPixelInfos.y) {
-		float4 prevPixelInfos = _bufferTextureA.read(toUint2(prevPosition));
+	float4 nextPixel = _bridgeTexture.read(nextPosition);
+	float nextPixelValue = pixelValue(nextPixel);
 
-		if(prevPixelInfos.x < inPixelInfos.x) {
-			// Inverse current and previous pixel on bridge and inverse values (x) on buffer A
-			float4 newInPixelInfos = inPixelInfos;
-			newInPixelInfos.x = prevPixelInfos.x;
+	if(abs(inPixelValue - nextPixelValue) >= _threshold)
+		return;
 
-			_bufferTextureB.write(inPixel, toUint2(prevPosition));
-			_bufferTextureA.write(newInPixelInfos, _position);
+	if(inPixelValue >= nextPixelValue)
+		return;
 
-			float4 newprevPixelInfos = prevPixelInfos;
-			newprevPixelInfos.x = inPixel.x;
-			float4 prevPixel = _bufferTextureB.read(toUint2(prevPosition));
-
-			_bufferTextureB.write(prevPixel, _position);
-			_bufferTextureA.write(newprevPixelInfos, toUint2(prevPosition));
-
-			inPixel = prevPixel;
-			inPixelInfos = newInPixelInfos;
-		}
-	}
-
-	// If this is not a section end, compare with previous
-	if(!inPixelInfos.z) {
-		float4 nextPixelInfos = _bufferTextureA.read(toUint2(nextPosition));
-
-		if(nextPixelInfos.x > inPixelInfos.x) {
-			// Inverse current and previous pixel on bridge and inverse values (x) on buffer A
-			float4 newInPixelInfos = inPixelInfos;
-			newInPixelInfos.x = nextPixelInfos.x;
-
-			_bufferTextureB.write(inPixel, toUint2(nextPosition));
-			_bufferTextureA.write(newInPixelInfos, _position);
-
-			float4 newNextPixelInfos = nextPixelInfos;
-			newNextPixelInfos.x = inPixel.x;
-			float4 nextPixel = _bufferTextureB.read(toUint2(nextPosition));
-
-			_bufferTextureB.write(nextPixel, _position);
-			_bufferTextureA.write(newNextPixelInfos, toUint2(nextPosition));
-
-			inPixel = nextPixel;
-			inPixelInfos = newInPixelInfos;
-		}
-	}
-
+	_bridgeTexture.write(nextPixel, _position);
+	_bridgeTexture.write(inPixel, nextPosition);
 }
-
-
-void PixelSortingEffect::passC() {
-	_bridgeTexture.write(_bufferTextureB.read(_position), _position);
-}
-
-
-
 
 float PixelSortingEffect::pixelValue(const float4 color) {
 	// Luminance
@@ -137,30 +97,9 @@ bool PixelSortingEffect::sameSection(const float4 colorA, const float4 colorB) {
 	return abs(pixelValue(colorA) - pixelValue(colorB)) < _threshold;
 }
 
-uint2 PixelSortingEffect::nextPosition(const uint2 currentPosition) {
-	return nextPosition(float2(currentPosition.x, currentPosition.y));
-}
-
-uint2 PixelSortingEffect::nextPosition(float2 currentPosition) {
-	float2 position = currentPosition + _nextVector;
-	return uint2(position.x, position.y);
-}
-
-
-uint2 PixelSortingEffect::prevPosition(const uint2 currentPosition) {
-	return prevPosition(float2(currentPosition.x, currentPosition.y));
-}
-
-uint2 PixelSortingEffect::prevPosition(float2 currentPosition) {
-	float2 position = currentPosition - _nextVector;
-	return uint2(position.x, position.y);
-}
-
-bool PixelSortingEffect::positionIsInTexture(const float2 precisePosition) {
-	return precisePosition.x >= 0 &&
-		   precisePosition.x < _textureDimensions->x &&
-		   precisePosition.y >= 0 &&
-		   precisePosition.y < _textureDimensions->y;
+bool PixelSortingEffect::positionIsInTexture(const uint2 position) {
+	return position.x < uint(_textureDimensions->x) &&
+		   position.y < uint(_textureDimensions->y);
 }
 
 uint2 PixelSortingEffect::toUint2(float2 position) {

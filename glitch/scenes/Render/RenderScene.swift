@@ -30,11 +30,13 @@ extension RenderScene {
 		view.wantsLayer = true
 
 		// Register our observers
-		NotificationCenter.default.addObserver(self, selector: #selector(onImageUpdate), name: NSNotification.Name("userOpenedFile"), object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(onImageUpdate), name: Notifications.openFile.name, object: nil)
 
-		NotificationCenter.default.addObserver(self, selector: #selector(onSave), name: NSNotification.Name(rawValue: "userAskForSaving"), object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(onSave), name: Notifications.saveRender.name, object: nil)
 
-		NotificationCenter.default.addObserver(self, selector: #selector(manualRender), name: Notifications.doRender.name, object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(startLoop), name: Notifications.startRenderLoop.name, object: nil)
+
+		NotificationCenter.default.addObserver(self, selector: #selector(stopLoop), name: Notifications.stopRenderLoop.name, object: nil)
 	}
 
 	override func viewDidAppear() {
@@ -53,9 +55,9 @@ extension RenderScene {
 
 		//Load our first image
 		let fileURL = Bundle.main.url(forResource: "001", withExtension: ".jpeg")!
-		NotificationCenter.default.post(name: .init("userOpenedFile"), object: fileURL.relativePath)
+		NotificationCenter.default.post(name: Notifications.openFile.name, object: fileURL.relativePath)
 
-		metal.setupRenderLoop(framerate: 25, renderMethod: render)
+		startLoop()
 	}
 
 	func windowDidResize(_ notification: Notification) {
@@ -63,7 +65,7 @@ extension RenderScene {
 
 		sizePlaneToFit()
 
-		NotificationCenter.default.post(name: NSNotification.Name("windowDidResized"), object: nil)
+		NotificationCenter.default.post(name: Notifications.windowResized.name, object: nil)
 	}
 }
 
@@ -71,11 +73,11 @@ extension RenderScene {
 // MARK: - User event
 extension RenderScene {
 	override func scrollWheel(with event: NSEvent) {
-		NotificationCenter.default.post(name: NSNotification.Name("userScrollGlitch"), object: event)
+		NotificationCenter.default.post(name: Notifications.userScrolled.name, object: event)
 	}
 
 	override func magnify(with event: NSEvent) {
-		NotificationCenter.default.post(name: NSNotification.Name("userMagnifyGlitch"), object: event)
+		NotificationCenter.default.post(name: Notifications.userMagnified.name, object: event)
 	}
 
 	@objc
@@ -95,11 +97,28 @@ extension RenderScene {
 		NSDocumentController.shared.noteNewRecentDocumentURL(newImagePath)
 
 		sizePlaneToFit()
+
+		// If rendering is pause, let's force a render
+		if(!metal.hasRenderLoop) {
+			metal.startRenderPass()
+			GlitchEngine.instance.renderWithEffects(plane)
+			metal.endRenderPass()
+		}
 	}
 
 	@objc
 	func onSave() {
 		metal.saveCurrentTexture()
+	}
+
+	@objc
+	func startLoop() {
+		metal.setupRenderLoop(framerate: 25, renderMethod: render)
+	}
+
+	@objc
+	func stopLoop() {
+		metal.stopRenderLoop()
 	}
 }
 
@@ -109,24 +128,11 @@ extension RenderScene {
 	func render() -> Void {
 		GlitchEngine.instance.render(plane)
 	}
+}
 
-	@objc
-	func manualRender() -> Void {
-		guard !_inRender else { return }
-		_inRender = true
 
-		metal.startRenderPass()
-		GlitchEngine.instance.prerenderEffects();
-
-		DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(1000)) {
-			GlitchEngine.instance.renderWithEffects(self.plane);
-			MetalEngine.instance.endRenderPass()
-
-			self._inRender = false
-		}
-
-	}
-
+// MARK: - Plane handling
+extension RenderScene {
 	func sizePlaneToFit() -> Void {
 		plane.position.x = view.frame.size.widthFloat / 2.0
 		plane.position.y = view.frame.size.heightFloat / 2.0
@@ -157,5 +163,4 @@ extension RenderScene {
 		plane.size.height = view.frame.size.height
 		plane.size.width = (view.frame.size.height / currentTextureDimensions.height) * currentTextureDimensions.width
 	}
-
 }

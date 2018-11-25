@@ -10,6 +10,11 @@ import Foundation
 import Metal
 
 extension MTLTexture {
+
+	var region:MTLRegion {
+		return MTLRegionMake2D(0, 0, self.width, self.height)
+	}
+
 	func bytes() -> UnsafeMutableRawPointer {
 		let width = self.width
 		let height   = self.height

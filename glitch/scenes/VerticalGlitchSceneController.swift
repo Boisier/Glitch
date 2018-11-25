@@ -27,7 +27,7 @@ class VerticalGlitchSceneController: NSViewController, NSWindowDelegate {
 
 		view.autoresizingMask = [.width, .height]
 
-		NotificationCenter.default.addObserver(self, selector: #selector(onImageUpdate), name: NSNotification.Name("userOpenedFile"), object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(onImageUpdate), name: Notifications.openFile.name, object: nil)
 
 		initMetal()
 	}

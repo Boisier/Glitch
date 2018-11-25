@@ -98,11 +98,11 @@ extension SidebarGlitchParameter {
 		}
 
 		// Add observers
-		NotificationCenter.default.addObserver(self, selector: #selector(onWindowResize), name: NSNotification.Name("windowDidResized"), object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(onWindowResize), name: Notifications.windowResized.name, object: nil)
 
-		NotificationCenter.default.addObserver(self, selector: #selector(onScroll), name: NSNotification.Name("userScrollGlitch"), object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(onScroll), name: Notifications.userScrolled.name, object: nil)
 
-		NotificationCenter.default.addObserver(self, selector: #selector(onMagnify), name: NSNotification.Name("userMagnifyGlitch"), object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(onMagnify), name: Notifications.userMagnified.name, object: nil)
 	}
 
 	func setupForSingleValue() {
