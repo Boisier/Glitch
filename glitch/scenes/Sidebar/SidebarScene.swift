@@ -58,4 +58,8 @@ class SidebarScene: NSViewController {
 
 		popup.selectItem(at: 0)
 	}
+
+	@IBAction func render(_ sender: NSButton) {
+		NotificationCenter.default.post(name: Notifications.doRender.name, object: nil)
+	}
 }

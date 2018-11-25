@@ -254,12 +254,12 @@ extension SidebarGlitchParameter {
 
 		switch(_glitchParameter.interaction) {
 		case .scrollX:
-			updateFirstFieldWith(value: firstInputStepper.floatValue + scrollAmountX)
+			updateFirstFieldWith(value: firstInputStepper.floatValue + scrollAmountX * _firstValue.step)
 		case .scrollY:
-			updateFirstFieldWith(value: firstInputStepper.floatValue + scrollAmountY)
+			updateFirstFieldWith(value: firstInputStepper.floatValue + scrollAmountY * _firstValue.step)
 		case .scroll2D:
-			updateFirstFieldWith(value: firstInputStepper.floatValue + scrollAmountX)
-			updateSecondFieldWith(value: secondInputStepper.floatValue + scrollAmountY)
+			updateFirstFieldWith(value: firstInputStepper.floatValue + scrollAmountX * _firstValue.step)
+			updateSecondFieldWith(value: secondInputStepper.floatValue + scrollAmountY * _secondValue.step)
 		default: return
 		}
 	}

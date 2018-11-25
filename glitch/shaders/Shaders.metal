@@ -40,6 +40,13 @@ fragment float4 mesh_fragment_default(         Vertex           frag          [[
 }
 
 fragment float4 mesh_fragment_glitch(          Vertex           frag          [[ stage_in   ]],
+									 texture2d<float> tex2D         [[ texture(0) ]],
+									 sampler          sampler2D     [[ sampler(0) ]])
+{
+	return tex2D.sample(sampler2D, frag.uv);
+}
+
+/* fragment float4 mesh_fragment_glitch(          Vertex           frag          [[ stage_in   ]],
 									  constant WorldUniforms  * worldUniforms [[  buffer(1) ]],
 									  constant Uniforms       * uniforms      [[  buffer(2) ]],
 									           texture2d<float> tex2D         [[ texture(0) ]],
@@ -92,43 +99,6 @@ fragment float4 mesh_fragment_glitch(          Vertex           frag          [[
 	}
 
 	return texelColor;
-}
-
-
-//
-//
-//fragment float4 mesh_fragment_square_clamping(         Vertex           frag          [[  stage_in  ]],
-//											  constant WorldUniforms  * worldUniforms [[  buffer(1) ]],
-//											  constant Uniforms       * uniforms      [[  buffer(2) ]],
-//											  texture2d<float> 			tex2D         [[ texture(0) ]],
-//											  sampler          			sampler2D     [[ sampler(0) ]]) {
-//
-//	float2 sourceFragment;
-//
-//	// Frag X
-//	if(frag.position.x < uniforms->squarePosition.x) {
-//		sourceFragment.x = uniforms->squarePosition.x;
-//	} else if(frag.position.x > uniforms->squarePosition.x + uniforms->squareSize.x) {
-//		sourceFragment.x = uniforms->squarePosition.x + uniforms->squareSize.x;
-//	} else {
-//		sourceFragment.x = frag.position.x;
-//	}
-//
-//	// Frag Y
-//	if(frag.position.y < uniforms->squarePosition.y) {
-//		sourceFragment.y = uniforms->squarePosition.y;
-//	} else if(frag.position.y > uniforms->squarePosition.y + uniforms->squareSize.y) {
-//		sourceFragment.y = uniforms->squarePosition.y + uniforms->squareSize.y;
-//	} else {
-//		sourceFragment.y = frag.position.y;
-//	}
-//
-//	// Normalize coordinates
-//	sourceFragment.x /= worldUniforms->resolution.x;
-//	sourceFragment.y /= worldUniforms->resolution.y;
-//
-//	float4 color = tex2D.sample(sampler2D, sourceFragment);
-//	return float4(color);
-//}
+} */
 
 #endif

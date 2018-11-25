@@ -52,7 +52,7 @@ class VerticalGlitchSceneController: NSViewController, NSWindowDelegate {
 	}
 
 	private func initMetal() {
-		metal.setup(layer: view.layer!)
+		metal.setLayer(layer: view.layer!)
 
 		// Init our plane
 		plane = PlaneMesh(x: Float(view.layer!.frame.width / 2.0),

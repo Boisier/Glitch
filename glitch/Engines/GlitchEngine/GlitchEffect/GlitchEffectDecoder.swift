@@ -15,12 +15,15 @@ struct GlitchEffectsDecoderEncapsulation: Codable {
 struct GlitchEffectDecoder:Codable {
 	let name: String
 	let identifier: Int
+	let renderPasses: Int
+
 	var parameters : [GlitchParameterDecoder]
 
 	func decode() -> GlitchEffect {
 		return GlitchEffect(
 			name: self.name,
 			identifier: self.identifier,
+			renderPasses: self.renderPasses,
 			parameters: self.parameters.map{ $0.decode() }
 		)
 	}

@@ -54,7 +54,7 @@ float4 PixelSorter::forFragment(Vertex frag, float4 currentColor)
 	}
 
 	// Get the number of frags in the section
-	float sectionFragsCount = (_bottomBound.y - _topBound.y) / increment;
+	//float sectionFragsCount = (_bottomBound.y - _topBound.y) / increment;
 
 	// Get our current fragment position in the section
 	float currentFragPosition = (fragUV.y - _topBound.y) / increment;

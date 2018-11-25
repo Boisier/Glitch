@@ -35,6 +35,8 @@ class Mesh {
 	/// Hold the vertices of the mesh
 	private var _vertices:[Vertex]
 
+	var vertices:[Vertex] { return _vertices }
+
 	/// Tell if the vertices have been updated since the last time they were sent
 	/// to the GPU
 	private var _verticesUpdated:Bool
@@ -47,6 +49,8 @@ class Mesh {
 
 	/// The buffer holding this mesh vertices
 	private var _buffer:MTLBuffer?
+
+	var vertexBuffer:MTLBuffer? { return _buffer }
 
 	// /////////////////////////////////////
 	// MARK: Transformation properties
@@ -61,6 +65,8 @@ class Mesh {
 
 	/// Buffer holdings the transformations to apply on the mesh
 	private var _transformationsBuffer:MTLBuffer?
+
+	var transformationsBuffer:MTLBuffer? { return _transformationsBuffer }
 
 
 	// ////////////////////////////
@@ -86,6 +92,8 @@ class Mesh {
 
 	/// The render pipeline used by this mesh
 	private var _renderPipeline:MTLRenderPipeline!
+
+	var renderPipeline:MTLRenderPipelineState { return _renderPipeline.pipeline }
 
 	var customUniforms: MTLBuffer?
 
@@ -126,7 +134,7 @@ extension Mesh {
 		}
 
 		_textureName = url.absoluteString
-		MetalEngine.instance.loadTexture(_textureName!, at: url)
+		MetalEngine.instance.storeTexture(_textureName!, at: url)
 
 		self.renderMode = .textured
 	}

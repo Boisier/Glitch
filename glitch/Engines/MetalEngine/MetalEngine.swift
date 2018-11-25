@@ -10,6 +10,7 @@ import Foundation
 import Cocoa
 import Metal
 import MetalKit
+import ImageIO
 
 /// The Metal Engine is an overlay on top of Metal, allowing for easier use.
 ///
@@ -24,7 +25,7 @@ class MetalEngine {
 	private static var _instance:MetalEngine?
 
 	/// Mark init as private to prevent oustide init
-	private init() {}
+	private init() { setup() }
 
 	/// get an instance of the engine. Instanciate if needed.
 	static var instance:MetalEngine {
@@ -70,6 +71,11 @@ class MetalEngine {
 
 	/// Stored render pipelines
 	private var _renderPipelines: Dictionary<String, MTLRenderPipelineState> = Dictionary<String, MTLRenderPipelineState>();
+
+	/// Stored compute pipelines
+	private var _computePipelines: Dictionary<String, MTLComputePipelineState> = Dictionary<String, MTLComputePipelineState>();
+
+	var computePipelines:Dictionary<String, MTLComputePipelineState> { return _computePipelines }
 
 	/// Stored vertex shaders functions
 	private var _shadersFunctions:Dictionary<String, MTLFunction> = Dictionary<String, MTLFunction>();
@@ -128,8 +134,6 @@ class MetalEngine {
 
 	/// The buffer holding the world uniforms for the current pass
 	private var _worldUniformsBuffer:MTLBuffer!
-
-	private var _shadersArray:MTLBuffer!
 
 
 	// ////////////////////
@@ -191,7 +195,7 @@ extension MetalEngine {
 	/// The surface will have the same dimension as the layer.
 	///
 	/// - Parameter parentLayer: The parent layer for the metal surface
-	func setup(layer parentLayer: CALayer) -> Void {
+	func setup() -> Void {
 
 		// Make sure the engine isn't already initialized
 		guard !self.initialized else { return }
@@ -199,15 +203,23 @@ extension MetalEngine {
 		// Set up our device
 		_device = MTLCreateSystemDefaultDevice()
 
-		// Set up our layer
-		_parentLayer = parentLayer
-		makeMetalLayer(parentLayer.frame)
-
 		// Set up our command queue (used to send instructions to the GPU)
 		_commandQueue = _device.makeCommandQueue()
 
 		// Set up our library for querying shaders
 		_defaultLibrary = _device.makeDefaultLibrary()!
+
+		// Register event listener for various application state update
+		registerEventListeners()
+
+		// Finaly, mark the engine as initialized
+		_initialized = true;
+	}
+
+	func setLayer(layer parentLayer: CALayer) -> Void {
+		// Set up our layer
+		_parentLayer = parentLayer
+		makeMetalLayer(parentLayer.frame)
 
 		// set our render environnement
 		onFrameResize()
@@ -215,16 +227,6 @@ extension MetalEngine {
 		// Initialize the world uniforms buffer
 		var wU = self.worldUniforms
 		_worldUniformsBuffer = makeBuffer(of: &wU, size: MemoryLayout<WorldUniforms>.stride)
-
-		// Initialize the array buffer for the shaders
-//		_shadersArray = makeBuffer(of: [], size: MemoryLayout<ShaderArray>.stride * 100)
-		_shadersArray = _device.makeBuffer(length: MemoryLayout<float4>.stride * 100, options: MTLResourceOptions.storageModePrivate)
-
-		// Register event listener for various application state update
-		registerEventListeners()
-
-		// Finaly, mark the engine as initialized
-		_initialized = true;
 	}
 
 	func makeMetalLayer(_ frame: CGRect) -> Void {
@@ -263,6 +265,21 @@ extension MetalEngine {
 
 		// Finally, build our pipeline using the descriptor
 		_renderPipelines[name] = try! _device.makeRenderPipelineState(descriptor: pipelineStateDescriptor)
+	}
+
+
+	/// Generate a compute pipeline with the given function
+	///
+	/// - Parameters:
+	///   - name: Name to give to the pipeline. Will be used for retrieval
+	///   - computeFunction: Name of the kernel function
+	func makeComputePipeline(_ name: String, computeFunction: String) -> Void {
+		do {
+			let function = makeShaderFunction(computeFunction)
+			_computePipelines[name] = try _device.makeComputePipelineState(function: function)
+		} catch {
+			fatalError(error.localizedDescription)
+		}
 	}
 
 
@@ -349,7 +366,7 @@ extension MetalEngine {
 	/// - Parameters:
 	///   - name: Name to give to the texture
 	///   - url: URL to the texture
-	func loadTexture(_ name: String, at url: URL) -> Void {
+	func storeTexture(_ name: String, at url: URL) -> Void {
 		// Check if URL is already loaded
 		guard _textures.index(forKey: url) == nil else {
 			// Url already loaded, just add an alias
@@ -357,13 +374,32 @@ extension MetalEngine {
 			return
 		}
 
-		// Load the texture
+		// Store the texture
+		_textures[url] = loadTexture(at: url)
+		_texturesNames[name] = url
+	}
+
+	func loadTexture(at url: URL) -> MTLTexture {
+		// Load and resize the texture
+		let sourceImage = NSImage(byReferencing: url).resize(to: NSSize(width: 1000, height: 1000))
 		let loader = MTKTextureLoader(device: _device)
-		let texture = try! loader.newTexture(URL: url, options: nil)
+		return try! loader.newTexture(data: sourceImage.tiffRepresentation!, options: nil)
+	}
+
+	func makeShaderTexture(_ name: String, from sourceTexture: MTLTexture) -> Void {
+		let descriptor = MTLTextureDescriptor.texture2DDescriptor(
+			pixelFormat: .bgra8Unorm,
+			width: sourceTexture.width,
+			height: sourceTexture.height,
+			mipmapped: false)
+		descriptor.usage = MTLTextureUsage(rawValue: MTLTextureUsage.shaderRead.rawValue | MTLTextureUsage.shaderWrite.rawValue)
+
+		let texture = _device.makeTexture(descriptor: descriptor)
 
 		// Store the texture
-		_textures[url] = texture
-		_texturesNames[name] = url
+		_textures[URL(string: name)!] = texture
+		_texturesNames[name] = URL(string: name)!
+
 	}
 
 	/// Gets a texture by its name. Fails if the texture does not exist
@@ -456,10 +492,21 @@ extension MetalEngine {
 		let renderEncoder = _commandBuffer!.makeRenderCommandEncoder(descriptor: _renderPassDescriptor!)!
 
 		renderEncoder.setViewport(_viewport)
-		renderEncoder.setFragmentBuffer(_shadersArray, offset: 0, index: 9)
 
 		return renderEncoder
 	}
+
+	func getComputeEncoder(_ name: String) -> MTLComputeCommandEncoder {
+		guard _inRenderPass else {
+			fatalError("Cannot get a renderEncoder outside a render pass")
+		}
+
+		let computeEncoder = _commandBuffer!.makeComputeCommandEncoder(dispatchType: .concurrent)!
+		computeEncoder.setComputePipelineState(_computePipelines[name]!)
+
+		return computeEncoder
+	}
+
 
 	/// Gets a renderEncoder, used to send directive to the GPU. The methods must only be called inside a render pass.
 	///

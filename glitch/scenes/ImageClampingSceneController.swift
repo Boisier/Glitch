@@ -78,7 +78,7 @@ class ImageClampingSceneController: NSViewController, NSWindowDelegate {
 	}
 
 	private func initMetal() {
-		metal.setup(layer: view.layer!)
+		metal.setLayer(layer: view.layer!)
 
 		// Init our plane
 		plane = PlaneMesh(x: view.frame.size.widthFloat / 2,

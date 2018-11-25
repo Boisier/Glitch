@@ -15,6 +15,7 @@ class GlitchEffect {
 
 	let name: String
 	let identifier: Int
+	let renderPasses: Int
 	var parameters: [GlitchParameter]
 
 	// /////////////////////////////////
@@ -27,9 +28,11 @@ class GlitchEffect {
 	/// Initializer
 	init(name: String,
 		 identifier: Int,
+		 renderPasses: Int,
 		 parameters: [GlitchParameter]) {
 		self.name = name
 		self.identifier = identifier
+		self.renderPasses = renderPasses
 		self.parameters = parameters
 	}
 }

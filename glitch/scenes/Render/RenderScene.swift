@@ -16,6 +16,8 @@ class RenderScene: NSViewController, NSWindowDelegate {
 	var currentTextureDimensions:NSSize!
 
 	var metal = MetalEngine.instance
+
+	private var _inRender:Bool = false
 }
 
 // MARK: - View Lyfecycle
@@ -31,6 +33,8 @@ extension RenderScene {
 		NotificationCenter.default.addObserver(self, selector: #selector(onImageUpdate), name: NSNotification.Name("userOpenedFile"), object: nil)
 
 		NotificationCenter.default.addObserver(self, selector: #selector(onSave), name: NSNotification.Name(rawValue: "userAskForSaving"), object: nil)
+
+		NotificationCenter.default.addObserver(self, selector: #selector(manualRender), name: Notifications.doRender.name, object: nil)
 	}
 
 	override func viewDidAppear() {
@@ -38,7 +42,7 @@ extension RenderScene {
 		view.window?.delegate = self
 
 		// Set up metal
-		metal.setup(layer: view.layer!)
+		metal.setLayer(layer: view.layer!)
 
 		// Set up our plane
 		plane = PlaneMesh(x: view.frame.size.widthFloat / 2.0,
@@ -79,14 +83,16 @@ extension RenderScene {
 		let pathString = obj.object as! String
 		let newImagePath = URL(fileURLWithPath: pathString)
 
+		// Load image to get its dimensions
+
 		plane.setTexture(fromURL: newImagePath)
+		GlitchEngine.instance.setInput(texture: newImagePath)
+
+		let image = NSImage(byReferencing: newImagePath)
+		currentTextureDimensions = image.size
 
 		// Register oppened URL
 		NSDocumentController.shared.noteNewRecentDocumentURL(newImagePath)
-
-		// Load image to get its dimensions
-		let image = NSImage(byReferencing: newImagePath)
-		currentTextureDimensions = image.size
 
 		sizePlaneToFit()
 	}
@@ -101,18 +107,24 @@ extension RenderScene {
 // MARK: - Render loop
 extension RenderScene {
 	func render() -> Void {
-		var effectsUniforms:[Uniforms] = EffectsList.instance.uniforms
+		GlitchEngine.instance.render(plane)
+	}
 
-		if(effectsUniforms.count == 0) {
-			effectsUniforms.append(Uniforms(effectsCount: 0, effectsIdentifiers: 0, effectsParametersCount: 0, parametersValues: float4(0)))
+	@objc
+	func manualRender() -> Void {
+		guard !_inRender else { return }
+		_inRender = true
+
+		metal.startRenderPass()
+		GlitchEngine.instance.prerenderEffects();
+
+		DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(1000)) {
+			GlitchEngine.instance.renderWithEffects(self.plane);
+			MetalEngine.instance.endRenderPass()
+
+			self._inRender = false
 		}
 
-		let uniformsBuffer = metal.makeBuffer(
-			of: &effectsUniforms,
-			size: effectsUniforms.count * MemoryLayout<Uniforms>.stride)
-
-		plane.customUniforms = uniformsBuffer
-		plane.render()
 	}
 
 	func sizePlaneToFit() -> Void {
