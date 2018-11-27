@@ -9,7 +9,9 @@
 import Foundation
 import AppKit
 
+/// Represent a section on the sidebar
 class SidebarGlitchSection: NSTableCellView {
+	/// Outlet to the section label
 	@IBOutlet
 	public var label:NSTextFieldCell?
 }

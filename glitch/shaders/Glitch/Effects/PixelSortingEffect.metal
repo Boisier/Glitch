@@ -28,7 +28,7 @@ void PixelSortingEffect::executeRenderPass(const int renderPass) {
 	}
 }
 
-/// PASS A : Get all related informations for this precise pixel and execute the sorting
+/// PASS A
 void PixelSortingEffect::passA() {
 
 	// Prev pixel

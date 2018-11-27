@@ -9,7 +9,9 @@
 import Foundation
 import AppKit
 
-//MARK: - Outline View Delegate methods
+// MARK: - Outline View Delegate
+///
+/// Methods used by the outline view to send events and get additional informations
 extension EffectsListScene: NSOutlineViewDelegate {
 	/// Gives the view representing the given item
 	///
@@ -20,7 +22,7 @@ extension EffectsListScene: NSOutlineViewDelegate {
 	/// - Returns: The view for the item
 	func outlineView(_ outlineView: NSOutlineView, viewFor tableColumn: NSTableColumn?, item: Any) -> NSView? {
 
-		guard let sidebarItem = item as? SideBarItem else { return nil }
+		guard let sidebarItem = item as? SidebarItem else { return nil }
 
 		switch sidebarItem {
 		case .section(_):
@@ -39,7 +41,7 @@ extension EffectsListScene: NSOutlineViewDelegate {
 	///   - item: The concerned item
 	/// - Returns: True if its a header, false otherwise
 	func outlineView(_ outlineView: NSOutlineView, isGroupItem item: Any) -> Bool {
-		guard let sidebarItem = item as? SideBarItem else { return false }
+		guard let sidebarItem = item as? SidebarItem else { return false }
 
 		switch sidebarItem {
 		case .section(_):
@@ -56,7 +58,7 @@ extension EffectsListScene: NSOutlineViewDelegate {
 	///   - item: The item
 	/// - Returns: True if yess
 	func outlineView(_ outlineView: NSOutlineView, shouldSelectItem item: Any) -> Bool {
-		guard let sidebarItem = item as? SideBarItem else { return false }
+		guard let sidebarItem = item as? SidebarItem else { return false }
 
 		switch sidebarItem {
 		case .effect(_):
@@ -82,7 +84,7 @@ extension EffectsListScene: NSOutlineViewDelegate {
 			return
 		}
 
-		_currentItem = _currentSelection as? SideBarItem
+		_currentItem = _currentSelection as? SidebarItem
 
 		if case let .effect(effectKey) = _currentItem! {
 			EffectsList.instance.effects[effectKey]!.isSelected = true
@@ -92,6 +94,8 @@ extension EffectsListScene: NSOutlineViewDelegate {
 
 
 // MARK: - The views
+///
+/// Additional methos helping getting the views representing the effects on the outline view
 extension EffectsListScene {
 	/// Return the view for a section item
 	///
@@ -99,7 +103,7 @@ extension EffectsListScene {
 	///   - outlineView: The OutlineView to which this applies
 	///   - item: The current item
 	/// - Returns: The view
-	private func getSectionView(of outlineView:NSOutlineView, forItem item: SideBarItem) -> NSTableCellView {
+	private func getSectionView(of outlineView:NSOutlineView, forItem item: SidebarItem) -> NSTableCellView {
 		let view:SidebarGlitchSection = outlineView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "glitchEffectSection"), owner: self) as! SidebarGlitchSection
 
 		view.label!.stringValue = "Effets"

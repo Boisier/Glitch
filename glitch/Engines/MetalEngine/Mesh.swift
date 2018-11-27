@@ -13,7 +13,6 @@ import GLKit
 
 /// A Mesh is a 2D/3D object represented by an array of vertices.
 /// This class aims to allow for easy and efficient manipulation of meshs.
-///
 class Mesh {
 
 	// /////////////////////////////
@@ -35,6 +34,7 @@ class Mesh {
 	/// Hold the vertices of the mesh
 	private var _vertices:[Vertex]
 
+	/// The mesh vertices
 	var vertices:[Vertex] { return _vertices }
 
 	/// Tell if the vertices have been updated since the last time they were sent
@@ -50,6 +50,7 @@ class Mesh {
 	/// The buffer holding this mesh vertices
 	private var _buffer:MTLBuffer?
 
+	/// The mesh's vertex buffer
 	var vertexBuffer:MTLBuffer? { return _buffer }
 
 	// /////////////////////////////////////
@@ -58,6 +59,7 @@ class Mesh {
 	/// Collection of transformations to apply on the mesh when rendering
 	internal var _transformations:[float4x4] = [float4x4]()
 
+	/// The merged transformations of this mesh
 	internal var _mergedTransformations:float4x4 {
 		get { return _transformations.reduce(into: positionDeltaFromAnchor) { $0 *= $1 } }
 		set {}
@@ -66,6 +68,7 @@ class Mesh {
 	/// Buffer holdings the transformations to apply on the mesh
 	private var _transformationsBuffer:MTLBuffer?
 
+	/// The buffer holding the mesh's merged transformations
 	var transformationsBuffer:MTLBuffer? { return _transformationsBuffer }
 
 
@@ -93,8 +96,10 @@ class Mesh {
 	/// The render pipeline used by this mesh
 	private var _renderPipeline:MTLRenderPipeline!
 
+	/// The render pipeline used by the mesh
 	var renderPipeline:MTLRenderPipelineState { return _renderPipeline.pipeline }
 
+	/// A custom buffer that can be sent to the renderPipeline
 	var customUniforms: MTLBuffer?
 
 	// /////////////////////
@@ -112,6 +117,9 @@ class Mesh {
 
 // MARK: - Appearance
 extension Mesh {
+	/// Set the color to use when rendering the mesh
+	///
+	/// - Parameter color: The render color
 	func setColor(_ color:MTLColor) {
 		_renderColor = color
 
@@ -165,13 +173,13 @@ extension Mesh {
 		_verticesUpdated = false
 	}
 
-	// Create the vertices buffer and fills it with the mesh vertices
+	/// Create the vertices buffer and fills it with the mesh vertices
 	private func createVerticesBuffer() {
 		_buffer = MetalEngine.instance.makeBuffer(of: &_vertices, size: _verticesSize)
 		_verticesUpdated = false
 	}
 
-	// Create or update the transformation matrix buffer
+	/// Create or update the transformation matrix buffer
 	private func makeTransformationsBuffer () {
 		// If there is no buffer, create it
 		guard let buffer = _transformationsBuffer else {
@@ -344,6 +352,7 @@ extension Mesh {
 	}
 
 
+	/// Position difference between the mesh center and its defined anchor point
 	var positionDeltaFromAnchor:float4x4 { get {
 		var matrix:float4x4
 		switch anchor {
@@ -364,6 +373,8 @@ extension Mesh {
 	/// A mesh vertices coordinates should alwaus be between 0 and UNIT. The mesh
 	/// should then be scaled to get the desired size
 	static let UNIT:Float = 1.0
+
+	/// Half of a mesh base unit
 	static let DEMI_UNIT:Float = 0.5
 }
 
@@ -372,19 +383,31 @@ extension Mesh {
 extension Mesh {
 	/// Tell how the transformations have to behave on the mesh
 	enum AnchorPoint {
+		/// The mesh is assumed to be centerd on its anchor point
 		case middle
+
+		/// The mesh anchor point is assumed to be in the top front left position
 		case topFrontLeft
 	}
 
+	/// How the mesh should be rendered
 	enum RenderMode {
+		/// The mesh is rendered using the specified color
 		case colored
+
+		/// The mesh is rendered using the attached texture
 		case textured
 	}
 
+	/// Tells which vertex function should be used when rendering the mesh
 	enum VertexShaderFunction {
+		/// The default mesh vertex function
 		case `default`
+
+		/// A custom function
 		case function(_ function: String)
 
+		/// Return the correct vertex function based on the current enum value
 		var function:String { get {
 			switch self {
 			case .default:
@@ -395,10 +418,15 @@ extension Mesh {
 		} }
 	}
 
+	/// Tells which fragment function should be used when rendering the mesh
 	enum FragmentShaderFunction {
+		/// The default mesh fragment function
 		case `default`
+
+		/// A custom function
 		case function(_ function: String)
 
+		/// Return the correct fragment function based on the current enum value
 		var function:String { get {
 			switch self {
 			case .default:

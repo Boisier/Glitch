@@ -10,8 +10,8 @@ import Foundation
 import AppKit
 import simd
 
+/// The glitch engine handle effect loading, and the glitch rendering loop
 class GlitchEngine {
-
 	// ////////////////////
 	// MARK: Singleton
 
@@ -28,36 +28,43 @@ class GlitchEngine {
 		}
 	}
 
+	/// Hold a reference to the metal engine (Tight coupling)
 	private var _metal:MetalEngine = MetalEngine.instance
 
 
 	// /////////////////////////////////
 	// MARK: Effects
 
+	/// List of available effects
 	private var _availableEffects:[GlitchEffectDecoder]!
 
-	var availableEffects:[GlitchEffectDecoder] {
-		get { return _availableEffects! }
-	}
+	/// The list of available effects
+	var availableEffects:[GlitchEffectDecoder] { return _availableEffects! }
 
 	// /////////////////////
 	// Rendering properties
 
+	/// Name of the compute pipeline used by the engine
 	private let _computePipeline:String = "/glitch_engine/compute_pipeline"
+
+	/// Name of the entry point compute function used by the engine
 	private let _computeFunction:String = "glitch_engine_compute"
 
+	/// Texture name used to store the input image on the metal engine
 	private let _textureName:String = "/glitch_engine/input_texture"
-	private var _textureSize:CGSize!
 
+	/// Names of the additional buffers used on the render side
 	private let _shaderBuffersNames = [
-		"/glitch_engine/shader_buffer_a",	// The bridge texture between effects
-		"/glitch_engine/shader_buffer_b",   //
-		"/glitch_engine/shader_buffer_c",
-		"/glitch_engine/shader_buffer_d",
+		"/glitch_engine/bridge_buffer",		// The bridge texture between effects
+		"/glitch_engine/shader_buffer_b",   // Auxiliary buffer A
+		"/glitch_engine/shader_buffer_c",   // Auxiliary buffer A
+		"/glitch_engine/shader_buffer_d",   // Auxiliary buffer A
 	]
 
 	// MARK: - Initialization
-	/// mark init as private to prevent oustide init
+	/// Private init as private to prevent calling outside of the component initialization
+	///
+	///	Loads the available effects, build the compute pipeline and register observers
 	private init() {
 		loadEffects()
 
@@ -68,7 +75,7 @@ class GlitchEngine {
 }
 
 
-// MARK: - Effects
+// MARK: - Effects handling
 extension GlitchEngine {
 	/// Load all available effects from the source JSON file
 	private func loadEffects() -> Void {
@@ -82,7 +89,7 @@ extension GlitchEngine {
 		_availableEffects = availableEffectsToDecode.effects
 	}
 
-	/// Create a new effect, add it to the list, and return its index
+	/// Create a new effect, adding it to the EffectsList, and returns its index
 	///
 	/// - Parameter effect: ID of the current effect
 	/// - Returns: The newly created effect index
@@ -96,7 +103,7 @@ extension GlitchEngine {
 // MARK: - Rendering
 extension GlitchEngine {
 
-	/// Set the current input texture and resfresh the shader buffer.
+	/// Set the current input texture and resfresh the bridge buffer.
 	///
 	/// - Parameter texture: URL to the input texture
 	func setInput(texture: URL) -> Void {
@@ -111,6 +118,7 @@ extension GlitchEngine {
 		resetBridgeTexture()
 	}
 
+	/// Reset the bridge buffer with a copy of the input texture
 	@objc
 	func resetBridgeTexture() {
 
@@ -122,17 +130,20 @@ extension GlitchEngine {
 							  bytesPerRow: bridgeTexture.width * 4)
 	}
 
-	/// Will render the given mesh by applying each effect on it one by one
+	/// Tender the given mesh by applying each effect on it one by one.
+	///
+	/// This method has to be called inside a render pass.
+	///
+	/// - Parameter mesh: The meshto render
 	func render(_ mesh: Mesh) -> Void {
 		prerenderEffects()
 		renderWithEffects(mesh)
 	}
 
+	/// Execute all the effects on the Bridge shader.
+	///
+	/// This does not reset the bridge texture, allowing for continuous evolution.
 	func prerenderEffects() {
-		// The render of the effects will first take place in a compute encoder
-		// One all effects have been applied, the render will be done on another render encoder.
-
-
 		// Prepare the rendering loop
 		let effectsCount = EffectsList.instance.effects.count
 		var currentEffect = 0
@@ -149,7 +160,7 @@ extension GlitchEngine {
 
 		let computeEncoder = makeComputeEncoder()
 
-		// Execute a compute for each effect
+		// Execute a compute pass for each effect
 		EffectsList.instance.effects.forEach { key, effect in
 			guard effect.active else { return }
 
@@ -192,6 +203,9 @@ extension GlitchEngine {
 		computeEncoder.endEncoding()
 	}
 
+	/// Render the given plane with the current bridge buffer as texture
+	///
+	/// - Parameter mesh: The mesh to render
 	func renderWithEffects(_ mesh: Mesh) {
 		// Make sure the mesh is ready to be rendered
 		mesh.commit();
@@ -216,8 +230,11 @@ extension GlitchEngine {
 		renderEncoder.endEncoding()
 	}
 
+	/// Create and populate the compute encoder used by the engine on the prerender
+	///
+	/// - Returns: The generated compute encoder
 	func makeComputeEncoder() -> MTLComputeCommandEncoder {
-		let computeEncoder = _metal.getComputeEncoder(_computePipeline)
+		let computeEncoder = _metal.getComputeEncoder(pipeline: _computePipeline)
 
 		// Bind the textures
 		computeEncoder.setTextures([
@@ -245,15 +262,20 @@ extension GlitchEngine {
 extension GlitchEngine {
 	/// Decode a GLS string
 	///
-	/// All GLS String starts with an underscore (_)
-	/// Standard format is _<Value>[:Modifier]
-	/// Available values :
+	/// All GLS String starts with an underscore (_).
+	/// Standard format is _\<Value\>[:Modifier]
+	///
+	/// **Available values** :
 	///   * w -> Texture width
 	///   * h -> Texture height
 	///
-	/// Available Modifiers :
+	/// **Available Modifiers** :
 	///   * center -> Divides the value by two
 	///   * More to come
+	///
+	/// **Exemples**
+	///   * _h:center ➝ Vertical center ➝ texture_height / 2
+	///   * _w ➝ Total width ➝ texture_width
 	///
 	/// - Parameter gldString: The string to decode
 	/// - Returns: The decoded value. Will return 0.0 in case of failure

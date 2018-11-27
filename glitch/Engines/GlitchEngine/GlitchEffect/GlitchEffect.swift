@@ -9,17 +9,29 @@
 import Foundation
 import AppKit
 
+/// Represent a a glitch effect, with its proprieties and current values.
+///
+/// - Warning: Do not construct effects yourself, Any needed effect should be declared in JSON
 class GlitchEffect {
 	// ////////////////////////
 	// MARK: Effect properties
 
+	/// Name of the effect
 	let name: String
+
+	/// Unique ID of the effect
 	let identifier: Int
+
+	/// Number of render pass needed by the effect
 	let renderPasses: Int
+
+	/// Parameters of this effect
 	var parameters: [GlitchParameter]
 
 	// /////////////////////////////////
 	// MARK: Effect instance properties
+	
+	/// Tell if the effect is activated or not
 	var active:Bool = true
 
 	// Tell if the effect is currently selected (for event listening)

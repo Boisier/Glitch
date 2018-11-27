@@ -9,12 +9,16 @@
 import Foundation
 import Metal
 
+/// Adds methods for conversion
 extension MTLTexture {
-
+	/// Returns the current region of the texture
 	var region:MTLRegion {
 		return MTLRegionMake2D(0, 0, self.width, self.height)
 	}
 
+	/// return an `UnsafeMutableRawPointer` to the texture's data
+	///
+	/// - Returns: Pointer to the texture's data
 	func bytes() -> UnsafeMutableRawPointer {
 		let width = self.width
 		let height   = self.height
@@ -26,6 +30,9 @@ extension MTLTexture {
 		return p!
 	}
 
+	/// Convert the texture to a CGImage
+	///
+	/// - Returns: A CGImage representing the texture
 	func toImage() -> CGImage? {
 		let p = bytes()
 

@@ -9,12 +9,17 @@
 import Foundation
 import AppKit
 
+/// The scene representing the sidebar, with the `EffectsListScene` and the Add Effect
+/// popup list.
 class SidebarScene: NSViewController {
+	/// Outlet to the Effects Outline View
 	@IBOutlet
 	public var effectsOutlineView:NSView?
 
+	/// The effects list scene
 	public var effectsList:EffectsListScene?
 
+	/// Outlet to the Add Effect popup
 	@IBOutlet
 	public var addEffectPopUp:NSPopUpButton?
 
@@ -54,7 +59,7 @@ class SidebarScene: NSViewController {
 		guard popup.indexOfSelectedItem != 0 else { return }
 
 		// Add effect
-		EffectsList.instance.add(effectIdentifier: popup.selectedItem!.representedObject as! Int)
+		_ = EffectsList.instance.add(effectIdentifier: popup.selectedItem!.representedObject as! Int)
 
 		popup.selectItem(at: 0)
 	}

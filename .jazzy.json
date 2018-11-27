@@ -1,0 +1,69 @@
+{
+	"author": "Valentin (Boisier) Dufois",
+	"author_url": "http://valentindufois.fr",
+	"module": "glitch",
+	"docset_icon": "./glitch/Assets.xcassets/AppIcon.appiconset/logo-128.png",
+	"github_url": "https://github.com/Boisier/Glitch",
+	"min_acl": "private",
+	"undocumented_text": "",
+	"custom_categories": [
+		{
+			"name": "GlitchEngine",
+			"children": [
+				"GlitchEngine",
+				"GlitchEffect",
+				"GlitchParameter",
+				"GlitchParameterValue",
+				"GlitchParameterType",
+				"GlitchParameterInteraction",
+				"GlitchEffectsDecoderEncapsulation",
+				"GlitchEffectDecoder",
+				"GlitchParameterDecoder",
+				"GlitchParameterValueDecoder",
+				"GlitchEffectUniforms"
+			]
+		}, {
+			"name": "Metal Engine",
+			"children": [
+				"MetalEngine",
+				"Mesh",
+				"PlaneMesh",
+				"WorldUniforms",
+				"Vertex",
+				"MTLColor",
+				"MTLRenderPipeline",
+				"MTLTexture"
+			]
+		}, {
+			"name": "Sidebar",
+			"children": [
+				"SidebarScene",
+				"SidebarItem",
+				"SidebarGlitchSection",
+				"SidebarGlitchItem",
+				"SidebarGlitchParameter",
+				"EffectsList",
+				"EffectsListScene"
+			]
+		}, {
+			"name": "Window",
+			"children": [
+				"AppDelegate",
+				"SplitViewController",
+				"RenderScene"
+			]
+		}, {
+			"name": "Enumerations",
+			"children": [
+				"Notifications"
+			]
+		}, {
+			"name": "Extensions",
+			"children": [
+				"CGSize",
+				"NSImage",
+				"float4x4"
+			]
+		}
+	]
+}

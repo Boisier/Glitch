@@ -9,13 +9,18 @@
 import Foundation
 import AppKit
 
-//
+
+/// Represent the effects list on the side bar.
 class EffectsListScene: NSViewController {
+
+	/// Outline to the actual list element
 	@IBOutlet
 	var outlineView:NSOutlineView?
 
-	var _currentItem:SideBarItem? = nil
+	/// The currently selected item, if any
+	var _currentItem:SidebarItem? = nil
 
+	/// Register observers for the view
 	override func viewDidLoad() {
 		// Add Observers
 		NotificationCenter.default.addObserver(self, selector: #selector(onEffectAdded), name: Notifications.effectAdded.name, object: nil)
@@ -24,7 +29,7 @@ class EffectsListScene: NSViewController {
 
 
 // /////////////////////////
-// MARK: - user interactions
+// MARK: - User interactions
 extension EffectsListScene {
 
 	/// Append a new effect to the list
@@ -70,7 +75,7 @@ extension EffectsListScene {
 		guard outlineView?.selectedRow != -1 else { return }
 
 		let itemIndex = outlineView!.selectedRow
-		let item = outlineView!.item(atRow: itemIndex) as! SideBarItem
+		let item = outlineView!.item(atRow: itemIndex) as! SidebarItem
 
 		if case let .effect(effectKey) = item {
 			outlineView!.removeItems(

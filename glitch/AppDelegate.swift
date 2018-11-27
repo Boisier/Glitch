@@ -9,20 +9,19 @@
 import Cocoa
 
 @NSApplicationMain
+/// Handle events comming from the window, keyboard shortcuts, the toolbar and the TouchBar
 class AppDelegate: NSWindowController, NSApplicationDelegate {
 
-	func applicationDidFinishLaunching(_ aNotification: Notification) {
-		// Insert code here to initialize your application
-	}
-
-	func applicationWillTerminate(_ aNotification: Notification) {
-		// Insert code here to tear down your application
-	}
-
+	/// Called when the window is loaded, used to specify the window's properties
 	override func windowDidLoad() {
 		window!.titleVisibility = .hidden
 	}
 	
+	/// Called when the user wants to browse to open a file
+	///
+	/// Sends a "openFile" notification wit the filename attached to it
+	///
+	/// - Parameter sender: Element sending the event
 	@IBAction func onOpen(_ sender: Any) {
 		let dialog = NSOpenPanel();
 
@@ -48,44 +47,80 @@ class AppDelegate: NSWindowController, NSApplicationDelegate {
 		}
 	}
 
+	/// Called when a file is opened from the "recently opened" interface.
+	///
+	/// Sends a "openFile" notification wit the filename attached to it
+	///
+	/// - Parameters:
+	///   - sender: Element sending the evnt
+	///   - filename: Path to the file to open
+	/// - Returns: Returns true to confirm the file has been opened.
 	func application(_ sender: NSApplication, openFile filename: String) -> Bool {
 		NotificationCenter.default.post(name: Notifications.openFile.name, object: filename)
 
 		return true;
 	}
 
+	/// Called when the user wants to save the current render.
+	///
+	/// Sends a "saveRender" notification
+	///
+	/// - Parameter sender: Element sending the event
 	@IBAction func onSave(_ sender: Any) {
 		NotificationCenter.default.post(name: Notifications.saveRender.name, object: nil)
 	}
 
+
+	/// Called when the user wants to close/open the siedebar
+	///
+	/// Sends a "toggleSidebar" notification
+	///
+	/// - Parameter sender: Element sending the event
 	@IBAction func toggleSidebar(_ sender: Any) {
 		NotificationCenter.default.post(name: Notifications.toggleSidebar.name, object: nil)
 	}
 
+
+	/// Called when the user wants to add a new effect.
+	///
+	/// Sends a "addEffect" notification
+	///
+	/// - Parameter sender: Element sending the event
 	@IBAction func addEffect(_ sender: Any) {
 		NotificationCenter.default.post(name: Notifications.addEffect.name, object: nil)
 	}
 
-	private var _renderLoopActive: Bool = true
-	@IBOutlet var playPauseLabel: NSToolbarItem!
+
+	/// Outlet to the Play/Pause Button
 	@IBOutlet var playPauseBtn: NSSegmentedControl!
 
+	/// Called when the user wants to start/stop the render loop
+	///
+	/// Updates the Play/Pause btn and sends a "stopRenderLoop" or "startRenderLoop" notification
+	///
+	/// - Parameter sender: Element sending the event
 	@IBAction func toggleRenderLoop(_ sender: Any) {
-		if(_renderLoopActive) {
-			_renderLoopActive = false
-			playPauseLabel.label = "Play"
-			playPauseBtn.setImage(NSImage(named: NSImage.touchBarPlayTemplateName), forSegment: 0)
+		if(MetalEngine.instance.hasRenderLoop) {
+			// Stop the render loop
 			NotificationCenter.default.post(name: Notifications.stopRenderLoop.name, object: false)
+			playPauseBtn.setImage(NSImage(named: NSImage.touchBarPlayTemplateName), forSegment: 0)
+			playPauseBtn.setLabel("Play", forSegment: 0)
 
 			return
 		}
 
-		_renderLoopActive = true
-		playPauseLabel.label = "Pause"
-		playPauseBtn.setImage(NSImage(named: NSImage.touchBarPauseTemplateName), forSegment: 0)
+		// End the render loop
 		NotificationCenter.default.post(name: Notifications.startRenderLoop.name, object: false)
+		playPauseBtn.setImage(NSImage(named: NSImage.touchBarPauseTemplateName), forSegment: 0)
+		playPauseBtn.setLabel("Pause", forSegment: 0)
 	}
 
+
+	/// Called when the user wants to restart the render
+	///
+	/// Sends a resetRender notification
+	///
+	/// - Parameter sender: Element sending the event
 	@IBAction func restartRender(_ sender: Any) {
 		NotificationCenter.default.post(name: Notifications.resetRender.name, object: nil)
 	}

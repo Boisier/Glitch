@@ -9,7 +9,9 @@
 import Foundation
 import AppKit
 
-//MARK: - Outline View Data Source methods
+// MARK: - Outline View Data Source
+///
+/// Methods called by the outline view to populate itself
 extension EffectsListScene: NSOutlineViewDataSource {
 
 	/// Tells the number of childrens of the given item
@@ -19,7 +21,7 @@ extension EffectsListScene: NSOutlineViewDataSource {
 	///   - item: The parent item. Nil for root component
 	/// - Returns: The number if child items the given item has
 	func outlineView(_ outlineView: NSOutlineView, numberOfChildrenOfItem item: Any?) -> Int {
-		guard let sidebarItem = item as? SideBarItem else { return EffectsList.instance.effects.count }
+		guard let sidebarItem = item as? SidebarItem else { return EffectsList.instance.effects.count }
 
 		switch sidebarItem {
 		case .section(_):
@@ -40,13 +42,13 @@ extension EffectsListScene: NSOutlineViewDataSource {
 	/// - Returns: The item
 	func outlineView(_ outlineView: NSOutlineView, child index: Int, ofItem item: Any?) -> Any {
 		// If this is the root component, just returns the headers and effect names
-		guard let sidebarItem = item as? SideBarItem else {
-			return SideBarItem.effect(key: EffectsList.instance.effectsKeys[index])
+		guard let sidebarItem = item as? SidebarItem else {
+			return SidebarItem.effect(key: EffectsList.instance.effectsKeys[index])
 		}
 
 		switch sidebarItem {
 		case .effect(let effectIndex):
-			return SideBarItem.parameter(index: index, effectKey: effectIndex)
+			return SidebarItem.parameter(index: index, effectKey: effectIndex)
 		default:
 			return []
 		}
@@ -59,7 +61,7 @@ extension EffectsListScene: NSOutlineViewDataSource {
 	///   - item: The concerned item
 	/// - Returns: True if expandable, false otherwise
 	func outlineView(_ outlineView: NSOutlineView, isItemExpandable item: Any) -> Bool {
-		guard let sidebarItem = item as? SideBarItem else { return false }
+		guard let sidebarItem = item as? SidebarItem else { return false }
 
 		switch sidebarItem {
 		case .section(_):
@@ -79,7 +81,7 @@ extension EffectsListScene: NSOutlineViewDataSource {
 	///   - item: Current item
 	/// - Returns: The item value at the specified column
 	func outlineView(_ outlineView: NSOutlineView, objectValueFor tableColumn: NSTableColumn?, byItem item: Any?) -> Any? {
-		guard let sidebarItem = item as? SideBarItem else { return nil }
+		guard let sidebarItem = item as? SidebarItem else { return nil }
 
 		switch sidebarItem {
 		case .section(_):
@@ -98,7 +100,7 @@ extension EffectsListScene: NSOutlineViewDataSource {
 	///   - item: The item to give the needed height
 	/// - Returns: The height needed for the item
 	func outlineView(_ outlineView: NSOutlineView, heightOfRowByItem item: Any) -> CGFloat {
-		guard let sidebarItem = item as? SideBarItem else { return 1 }
+		guard let sidebarItem = item as? SidebarItem else { return 1 }
 
 		switch sidebarItem {
 		case .section(_):

@@ -112,6 +112,7 @@ class MetalEngine {
 	// /////////////////////////////
 	// MARK: Rendering loop settings
 
+	/// The current renderloop framerate
 	private var _framerate:Int?
 
 	/// Timer used when a rendering loop is set up
@@ -123,7 +124,7 @@ class MetalEngine {
 	/// Color used to clear the screen on each frame (default is black)
 	private var _clearColor:MTLClearColor = MTLClearColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.0)
 
-	var hasRenderLoop:Bool { return _timer != nil }
+	var hasRenderLoop:Bool { return _timer?.isValid ?? false }
 
 
 	// /////////////////////////////////
@@ -141,6 +142,7 @@ class MetalEngine {
 	// ////////////////////
 	// MARK: Miscellenaous
 
+	/// Should the render engine save its rendered texture on next render ?
 	private var _saveTextureOnRender:Bool = false
 }
 
@@ -168,6 +170,7 @@ extension MetalEngine {
 		set { _clearColor = clearColor }
 	}
 
+	/// The current world uniforms
 	var worldUniforms:WorldUniforms {
 		get {
 			var worldUniforms = WorldUniforms()
@@ -178,8 +181,10 @@ extension MetalEngine {
 		}
 	}
 
+	/// The buffer containing the world uniforms
 	var worldUniformsBuffer:MTLBuffer { get { return _worldUniformsBuffer }}
 
+	/// The frame representing the Metal surface
 	var frame:CGRect {
 		get {
 			return _metalLayer.frame
@@ -218,6 +223,9 @@ extension MetalEngine {
 		_initialized = true;
 	}
 
+	/// Set the layer to be used by the metal engine
+	///
+	/// - Parameter parentLayer: The layer to use
 	func setLayer(layer parentLayer: CALayer) -> Void {
 		// Set up our layer
 		_parentLayer = parentLayer
@@ -231,6 +239,9 @@ extension MetalEngine {
 		_worldUniformsBuffer = makeBuffer(of: &wU, size: MemoryLayout<WorldUniforms>.stride)
 	}
 
+	/// Create a metal layer for the given frame
+	///
+	/// - Parameter frame: The referencing frame
 	func makeMetalLayer(_ frame: CGRect) -> Void {
 		// Set up our layer
 		let metalLayer = CAMetalLayer()
@@ -381,15 +392,25 @@ extension MetalEngine {
 		_texturesNames[name] = url
 	}
 
+	/// Load the texture at the given URL inside a MTLTexture buffer and returns it
+	///
+	/// - Parameter url: URL to the image
+	/// - Returns: The created MTL texture
 	func loadTexture(at url: URL) -> MTLTexture {
 		// Load and resize the texture
-		let sourceImage = NSImage(byReferencing: url).resize(to: NSSize(width: 1000, height: 1000))
+		//let sourceImage = NSImage(byReferencing: url).resize(to: NSSize(width: 1000, height: 1000))
+		let sourceImage = NSImage(byReferencing: url)
 
 		let loader = MTKTextureLoader(device: _device)
 		let options = [MTKTextureLoader.Option.SRGB: false]
 		return try! loader.newTexture(data: sourceImage.tiffRepresentation!, options: options)
 	}
 
+	/// Create a Shader Texture to be used on the GPU
+	///
+	/// - Parameters:
+	///   - name: The name to give to this shader texture
+	///   - sourceTexture: The source texture to base the creation upon. This is required for simplier initialization
 	func makeShaderTexture(_ name: String, from sourceTexture: MTLTexture) -> Void {
 		let descriptor = MTLTextureDescriptor.texture2DDescriptor(
 			pixelFormat: .bgra8Unorm,
@@ -438,8 +459,8 @@ extension MetalEngine {
 	/// - Returns: The sampler descriptor
 	func defaultSampler() -> MTLSamplerState {
 		let sampler = MTLSamplerDescriptor()
-		sampler.minFilter             = MTLSamplerMinMagFilter.nearest
-		sampler.magFilter             = MTLSamplerMinMagFilter.nearest
+		sampler.minFilter             = MTLSamplerMinMagFilter.linear
+		sampler.magFilter             = MTLSamplerMinMagFilter.linear
 		sampler.mipFilter             = MTLSamplerMipFilter.nearest
 		sampler.maxAnisotropy         = 1
 		sampler.sAddressMode          = MTLSamplerAddressMode.clampToEdge
@@ -500,17 +521,6 @@ extension MetalEngine {
 		return renderEncoder
 	}
 
-	func getComputeEncoder(_ name: String) -> MTLComputeCommandEncoder {
-		guard _inRenderPass else {
-			fatalError("Cannot get a renderEncoder outside a render pass")
-		}
-
-		let computeEncoder = _commandBuffer!.makeComputeCommandEncoder()!
-		computeEncoder.setComputePipelineState(_computePipelines[name]!)
-
-		return computeEncoder
-	}
-
 
 	/// Gets a renderEncoder, used to send directive to the GPU. The methods must only be called inside a render pass.
 	///
@@ -528,6 +538,21 @@ extension MetalEngine {
 		}
 
 		return renderEncoder
+	}
+
+	/// Gets a compute encoder with the specified compute pipeline already set on it.
+	///
+	/// - Parameter pipeline: The compute pipeline to use
+	/// - Returns: The newly created compute pipeline
+	func getComputeEncoder(pipeline: String) -> MTLComputeCommandEncoder {
+		guard _inRenderPass else {
+			fatalError("Cannot get a renderEncoder outside a render pass")
+		}
+
+		let computeEncoder = _commandBuffer!.makeComputeCommandEncoder()!
+		computeEncoder.setComputePipelineState(_computePipelines[pipeline]!)
+
+		return computeEncoder
 	}
 
 	/// Send all instructions to the GPU, and effectively terminate the current render pass
@@ -555,16 +580,25 @@ extension MetalEngine {
 
 // MARK: - Rendering loop methods
 extension MetalEngine {
+	/// Init and start the render loop for the given framerate. The given method
+	/// will be called at each loop, inside a render pass.
+	///
+	/// The render method is called inside an autoreleasepool for better memory
+	/// management.
+	///
+	/// - Parameters:
+	///   - framerate: The framerate for the loop
+	///   - renderMethod: The renderMethod to call at each loop
 	func setupRenderLoop(framerate: Int, renderMethod: @escaping () -> Void) {
-
 		_framerate = framerate
 		_renderMethod = renderMethod
 
 		_timer = Timer.scheduledTimer(timeInterval: TimeInterval(1.0/Float(_framerate!)), target: self, selector: #selector(renderLoop), userInfo: nil, repeats: true)
 	}
 
+	/// The metal engine internal rendering loop
 	@objc
-	func renderLoop() {
+	private func renderLoop() {
 		autoreleasepool {
 			startRenderPass()
 
@@ -574,9 +608,9 @@ extension MetalEngine {
 		}
 	}
 
+	/// Invalidate the current rendering loop and prevent it from firing again.
 	func stopRenderLoop() {
 		_timer?.invalidate();
-		_timer = nil
 	}
 }
 
@@ -600,9 +634,7 @@ extension MetalEngine {
 	private func onPause() {
 		print("Pause app")
 
-		// Stop the timer
-		_timer?.invalidate()
-		_timer = nil
+		stopRenderLoop()
 	}
 
 	/// Resume the timer if it had been paused or stopped
@@ -624,11 +656,23 @@ extension MetalEngine {
 // MARK: - Model projection, Matrix and stuff
 extension MetalEngine {
 
+	/// Called when the metal frame is resized, update the metal frame dimensions
+	/// as well as the viewport and projection matrix
 	func onFrameResize() -> Void {
 		_viewport = MTLViewport(originX: 0, originY: 0, width: Double(self.resolution.x), height: Double(self.resolution.y), znear: 0.0, zfar: 1.0)
 		_projectionMatrix = makeOrthographicMatrix(left: 0, right: self.resolution.x, bottom: self.resolution.y, top: 0, near: 0.0, far: 1.0)
 	}
 
+	/// Create an orthographic for the fiven value
+	///
+	/// - Parameters:
+	///   - left: Left value
+	///   - right: Right value
+	///   - bottom: Bottom value
+	///   - top: Top value
+	///   - near: Near value
+	///   - far: Far value
+	/// - Returns: a float4x4 orthographic value
 	func makeOrthographicMatrix(left: Float, right: Float, bottom: Float, top: Float, near: Float, far: Float) -> float4x4 {
 		return float4x4(
 			[              2 / (right - left),                               0,                   0, 0],
@@ -653,11 +697,16 @@ extension MetalEngine {
 		return _drawable!.texture
 	}
 
+	/// Add mark telling the engine to save its next render
 	func saveCurrentTexture() {
 		_saveTextureOnRender = true
 		print("asked for save");
 	}
 
+	/// Saves the current render in the glitch folder on the user desktop
+	///
+	/// - Note: This method will be move elswhere shortly as this it is tighlty coupled
+	/// to the Glitch app and does not enforce an efficient reusability paradigm.
 	private func doSaveCurrentTexture() {
 		let currentTexture = getCurrentTexture().toImage()!
 		let image = NSImage(cgImage: currentTexture, size: _metalLayer.frame.size)
@@ -675,6 +724,10 @@ extension MetalEngine {
 	}
 
 
+	/// Gets the save folder URL
+	///
+	/// - Note: This method will be move elswhere shortly as this method is tighlty coupled
+	/// to the Glitch app and does not enforce an efficient reusability paradigm.
 	private var saveFolder:URL {
 		get {
 			// Get Application support URL
@@ -683,11 +736,7 @@ extension MetalEngine {
 			// Get and create if needed App folder in Application Support
 			let glitchSaveFolder = folder.appendingPathComponent("glitch")
 
-			do {
-				try FileManager.default.createDirectory(at: glitchSaveFolder, withIntermediateDirectories: false, attributes: [:])
-			} catch {
-				// print("Glitch save folder already exist.")
-			}
+			try? FileManager.default.createDirectory(at: glitchSaveFolder, withIntermediateDirectories: false, attributes: [:])
 
 			return glitchSaveFolder
 		}

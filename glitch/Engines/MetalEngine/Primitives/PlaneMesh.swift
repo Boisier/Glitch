@@ -10,6 +10,9 @@ import Foundation
 import simd
 import GLKit
 
+/// A plane mesh is a convenient representation of a 2D plane facing the camera.
+///
+/// This class simplifies the creation of a simple plane when doing 2D rendering
 class PlaneMesh: Mesh {
 
 	var size:CGSize
@@ -33,13 +36,12 @@ class PlaneMesh: Mesh {
 		self.primitiveType = .triangleStrip
 	}
 
-	override var _mergedTransformations: float4x4 {
-		get {
+	override var _mergedTransformations: float4x4 { get {
 			let positionMatrix = super.positionDeltaFromAnchor * float4x4(matrix: GLKMatrix4MakeTranslation(position.x, position.y, position.z))
 			let meshTransformations = super._transformations.reduce(into: positionMatrix) { $0 *= $1 }
 			return meshTransformations * float4x4(matrix: GLKMatrix4MakeScale(size.widthFloat, size.heightFloat, 0.0))
 		}
-		set {}
+		set { }
 	}
 
 		// Position and scaling
