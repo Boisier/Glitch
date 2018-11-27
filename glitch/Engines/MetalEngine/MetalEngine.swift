@@ -27,7 +27,7 @@ class MetalEngine {
 	/// Mark init as private to prevent oustide init
 	private init() { setup() }
 
-	/// get an instance of the engine. Instanciate if needed.
+	/// get an instance of the engine. Instanciate it if needed.
 	static var instance:MetalEngine {
 		get {
 			guard _instance == nil else { return _instance! }
